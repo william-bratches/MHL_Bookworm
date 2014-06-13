@@ -5,32 +5,35 @@
 from xml.dom.minidom import parseString
 import re
 import json
+import subprocess
+#may not need some of these, preserve memory
 
 
 globalId = "abdominalsurgery00smit"
 #TO DO: have the parser automatically swap IDs from folder
 
-#build input.txt
-
 file = open(globalId + "_djvu.txt")
 #standardized archive.org extension
-text = file.read()
+data = file.read()
 file.close()
-domtxt = parseString(text)
 #this can probably be abstracted into one function for both files
 #or maybe separated into two different parsing scripts
 
 def buildInput():
+	text = re.sub("[\n\r]","",data)
+	subprocess.call(['touch', 'input.txt'])                       #will probably need to break into two functions
+	inp = open('input.txt', 'w')                                      #so input.txt is not opened with every single file (improve speed)
+	inp.write(globalId + "    " + text)
 
-	"""template:
-	   store title in variable
-	   filter text (i.e. newlines)
-	   store filtered text in variable
-	   append end of input.txt with {title text}
-	"""
+	
 
+
+buildInput()
+#output = open("input.txt", "w")
 #build metadata entries
 
+
+"""
 file = open(globalId + '_dc.xml')
 #standardized archive.org extension
 data = file.read()
@@ -46,7 +49,7 @@ def parseMetadata(info, dataNum):
 	    out[metadataField] = info.getElementsByTagName(metadataField)[0].childNodes[0].data
 
 
-	"""template:
+	template:
 	   define tags to be parsed 
 	   loop through document to locate tags
 	   output content/child of variable
