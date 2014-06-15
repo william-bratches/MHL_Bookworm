@@ -10,36 +10,64 @@ import subprocess
 #may not need some of these, preserve memory
 
 
-#folder navigation
-def exploreDir():
-    # path = '/Desktop/MHL_Bookworm/samples/'
-    dirs = os.listdir('.')
+#main function to parse a directory
+def parseDir(count):
+    #set a directory to parse for archive.org files
+    path = '.'
+    
+    dirs = os.listdir(path)
     folders = []
     for folder in dirs:
-        print folder  #debugging
-        folders.append(folder)
-exploreDir()
-"""
-globalId = "abdominalsurgery00smit"
+        if os.path.isdir(folder):
+            folders.append(folder)
+    
+    
 
-def readInput():
-    file = open(globalId + "_djvu.txt") #archive.org extension
-    data = file.read()
-    file.close()
-    #this can probably be abstracted into one function for both files
-    #or maybe separated into two different parsing scripts
+    globalId = folders[count]
+    #archive.org uses a uniform naming system, files similar name to folder
+    print globalId   #debugging
 
 
-    def buildInput():
-        text = re.sub("[\n\r]","",data)
-        subprocess.call(['touch', 'input.txt'])                       #will probably need to break into two functions
-        inp = open('input.txt', 'w')                                      #so input.txt is not opened with every single file (improve speed)
-        inp.write(globalId + "    " + text + '/n')
-        inp.close()
-    buildInput()
-readInput()
-"""
+    def readInput():
+         #this can probably be abstracted into one function for both files
+        try:
+            file = open(os.path.join(globalId, globalId + "_djvu.txt"), "r") #archive.org extension
+        except IOError:
+            print "No match found for %s, trying other .txt files" % globalId
+            for book in os.listdir(globalId):
+                if book.endswith(".txt"):
+                     file = open(os.path.join(globalId, book), "r")
+                     print book
+                     """unsure if this will be effective, I have to see what the larger data looks like
+                        in my samples only .txt files are the ones I want, are there > 1 per directory in main database?
+                        if not specific enough, search for the first four letters"""
+     #else:
+     #     print "directory %s contains no .txt files, skipping" % globalId
+     #     parseDir() #skip it"""
+        data = file.read()
+        file.close()
 
+
+
+        def buildInput():
+            text = re.sub("[\n\r]","",data)
+            subprocess.call(['touch', 'input.txt'])
+            #maybe more efficient putting input.txt elsewhere, so it doesn't open w/every file?
+            inp = open('input.txt', 'a')
+            inp.write(globalId + "    " + text + '/n')
+            inp.close()
+        buildInput()
+    readInput()
+    
+    #recursion
+    if count < ((len(folders)) -1):
+        count + 1
+        parseDir(count)
+#initialization
+parseDir(0)
+
+
+#progress indicator?
 
 
 #build metadata entries
