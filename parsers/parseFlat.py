@@ -20,7 +20,7 @@ import subprocess
 #may not need some of these, preserve memory
 
 #navigate a folder, create array with all files and file globalId
-def parseFolder(count, folder, extension):
+def parseFolder(folder, extension):
     files = []
     for item in dirs:
         if os.path.isfile(item):
@@ -32,31 +32,32 @@ def parseFolder(count, folder, extension):
     return files
 
 #open the appropriate file, pull its contents
-def readInput(fileType, extension):
-	try:
-   	 	file = open(os.path.join(globalId, globalId + extension), "r") #archive.org ID + extension
-	except IOError:
-   	 	print "No match found for %s, trying partial match for %s files" % globalId fileType
-    #search for other files in directory
-   		for book in os.listdir(globalId):
-       	 	if book.endswith(fileType):
-            	file = open(os.path.join(globalId, book), "r")
-            	print book
+def readInput(count):
+	file = open(files[count], 'r')
 	data = file.read()
 	file.close()
 	return data
 
 
 #put file contents into input.txt, recur through entire folder
-def buildInput():
-	text = re.sub("[\n\r]","", readInput(".txt", "_djvu.txt"))
+def buildInput(count):
+	parseFolder('/texts/', '_djvu.txt')
 	subprocess.call(['touch', 'input.txt'])
-	#maybe more efficient putting input.txt elsewhere, so it doesn't open w/every file?
 	inp = open('input.txt', 'a')
-	inp.write(globalId + "    " + text + '/n')
+
+	def buildData(count):
+		text = re.sub("[\n\r]","", readInput(count))
+		inp.write(files[count][:-9] + "    " + text + '/n') #chops off _djvu.txt for global identification
+		if count < ((len(files)) -1):
+			count + 1
+			buildData(count)
+		else:
+			print "files done building!"	inp.close()
+	buildData(count)
 	inp.close()
 
-buildInput() #could be cause of endless recursion?
+
+buildInput(0) #could be cause of endless recursion?
 
 
 #might need a system of extracting global IDs, matching them against jsoncatalog.txt
@@ -81,12 +82,10 @@ readJSON()
 """
 
 #recursion --> next folder in array
-def recur:
-	if count < ((len(files)) -1):
-		count + 1
-		return count
+#def recur(count):
+	
+		
 
 
 #initialization
-parseFolder(0, './mhl_djvu_txt_files/', "_djvu.txt")
 #progress indicator?
