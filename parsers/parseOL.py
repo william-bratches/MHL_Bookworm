@@ -71,7 +71,7 @@ parseDir(0)
 
 
 #build metadata entries
-"""
+
 def readJSON():
     jsonfile = open(globalId + '_dc.xml')
     jdata = jsonfile.read()
@@ -95,5 +95,5 @@ def readJSON():
     
          parseMetadata()
 readJSON()
-"""
+
 
