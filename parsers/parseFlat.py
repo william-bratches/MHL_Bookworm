@@ -22,8 +22,8 @@ import subprocess
 #navigate a folder, create array with all files and file globalId
 def parseFolder(folder, extension):
     files = []
-    for item in dirs:
-        if os.path.isfile(item):
+    for item in os.listdir(folder):
+        if (os.path.isfile(os.path.join(folder, item))):
             files.append(item)
 
     #extract archive.org ID from file name, disabled - see note at top
@@ -31,39 +31,43 @@ def parseFolder(folder, extension):
     #return globalId[:-len(extension)]
     return files
 
+print parseFolder("/data/MHL/MHL_Bookworm/samples/texts", '_djvu.txt')
 #open the appropriate file, pull its contents
-def readInput(count):
-	file = open(files[count], 'r')
-	data = file.read()
-	file.close()
-	return data
 
 
 #put file contents into input.txt, recur through entire folder
 def buildInput(count):
-	parseFolder('/texts/', '_djvu.txt')
+	files = parseFolder("/data/MHL/MHL_Bookworm/samples/texts", '_djvu.txt')
 	subprocess.call(['touch', 'input.txt'])
 	inp = open('input.txt', 'a')
 
+	def readInput(count, folder):
+		file = open((os.path.join(folder, files[count])), 'r')
+		data = file.read()
+		file.close()
+		return data
+
 	def buildData(count):
-		text = re.sub("[\n\r]","", readInput(count))
-		inp.write(files[count][:-9] + "    " + text + '/n') #chops off _djvu.txt for global identification
+		text = re.sub("[\n\r]","", readInput(count, "/data/MHL/MHL_Bookworm/samples/texts"))
+		print "writing %s to input.txt" % files[count]
+		inp.write(files[count][:-9] + "    " + text + '\n') #chops off _djvu.txt for global identification
 		if count < ((len(files)) -1):
-			count + 1
+			count = count + 1
 			buildData(count)
 		else:
-			print "files done building!"	inp.close()
+			print "files done building!"	
 	buildData(count)
 	inp.close()
 
 
+
 buildInput(0) #could be cause of endless recursion?
 
-
+"""
 #might need a system of extracting global IDs, matching them against jsoncatalog.txt
 
 #build metadata entries
-"""
+
 def parseMetadata(info, dataNum):
     root = etree.fromstring(jdata)
  subprocess.call(['touch', 'jsoncatalog.txt'])
@@ -79,7 +83,7 @@ def parseMetadata(info, dataNum):
 
  parseMetadata()
 readJSON()
-"""
+
 
 #recursion --> next folder in array
 #def recur(count):
@@ -89,3 +93,4 @@ readJSON()
 
 #initialization
 #progress indicator?
+"""
