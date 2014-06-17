@@ -25,14 +25,15 @@ def parseFolder(folder, extension):
     for item in os.listdir(folder):
         if (os.path.isfile(os.path.join(folder, item))):
             files.append(item)
-
-    #extract archive.org ID from file name, disabled - see note at top
-    #globalId = files[count]
-    #return globalId[:-len(extension)]
     return files
 
-print parseFolder("/data/MHL/MHL_Bookworm/samples/texts", '_djvu.txt')
+
 #open the appropriate file, pull its contents
+def readInput(count, folder, files):
+	file = open((os.path.join(folder, files[count])), 'r')
+	data = file.read()
+	file.close()
+	return data
 
 
 #put file contents into input.txt, recur through entire folder
@@ -41,14 +42,8 @@ def buildInput(count):
 	subprocess.call(['touch', 'input.txt'])
 	inp = open('input.txt', 'a')
 
-	def readInput(count, folder):
-		file = open((os.path.join(folder, files[count])), 'r')
-		data = file.read()
-		file.close()
-		return data
-
 	def buildData(count):
-		text = re.sub("[\n\r]","", readInput(count, "/data/MHL/MHL_Bookworm/samples/texts"))
+		text = re.sub("[\n\r]","", readInput(count, "/data/MHL/MHL_Bookworm/samples/texts", files))
 		print "writing %s to input.txt" % files[count]
 		inp.write(files[count][:-9] + "    " + text + '\n') #chops off _djvu.txt for global identification
 		if count < ((len(files)) -1):
@@ -61,7 +56,7 @@ def buildInput(count):
 
 
 
-buildInput(0) #could be cause of endless recursion?
+buildInput(0)
 
 """
 #might need a system of extracting global IDs, matching them against jsoncatalog.txt
