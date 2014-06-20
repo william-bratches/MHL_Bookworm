@@ -1,11 +1,18 @@
 #!/usr/bin/python
 
-"""this parser is designed to specifically grab a test database of 3000 books"""
+"""this is a parser designed to build the input.txt and jsoncatalog.txt for the MHL bookworm in a flat
+directory tree where individual items do NOT have their own directories. parseDir handles the other case.
+
+A note on efficiency: right now the parser assumes that all files are perfectly set up, i.e. every
+input.txt has a corresponding meta.xml. This allows the parser to efficiently build data in bulk,
+parsing the entire text folder at once, for example. It may be modified later to build the database
+piecemeal, checking to see if every input.txt has a corresponding metadata file and then building a
+new line in both input.txt and jsoncatalog.txt for that single library item. We'll see how the final
+Presidio build goes."""
 
 #build core files for Presidio database
 
 from xml.dom.minidom import parseString
-import inspect
 import re
 import os, sys
 import subprocess
@@ -32,22 +39,19 @@ def readFolder(count, folder, files):
 #put file contents into input.txt, recur through entire folder
 def makeInput(count):
 	print "building input.txt..."
-	files = parseFolder("/data/MHL/MHL_download/mhl_djvu_txt_files", '_djvu.txt')
+	files = parseFolder("/data/MHL/MHL_Bookworm/samples/texts", '_djvu.txt')
 	subprocess.call(['touch', 'input.txt'])
 	inp = open('input.txt', 'a')
 
 	def buildInput(count):
-		text = re.sub("[\n\r]","", readFolder(count, "/data/MHL/MHL_download/mhl_djvu_txt_files", files))
+		text = re.sub("[\n\r]","", readFolder(count, "/data/MHL/MHL_Bookworm/samples/texts", files))
 		print "writing %s to input.txt..." % files[count]
 		inp.write(files[count][:-9] + "    " + text + '\n') #chops off _djvu.txt to get ID
-
-		#recursion
-		if count < 3000:
+		if count < ((len(files)) -1):
 			count = count + 1
 			buildInput(count)
 		else:
 			print "input.txt done building!"	
-
 	buildInput(count)
 	inp.close()
 
@@ -56,18 +60,18 @@ def makeInput(count):
 #first pass: year, library, language
 def makeMeta(count):
 	print "building jsoncatalog.txt..."
-	xfiles = parseFolder("/data/MHL/MHL_download/mhl_meta_xml_files", '_meta.xml')
+	xfiles = parseFolder("/data/MHL/MHL_Bookworm/samples/meta", '_meta.xml')
 	subprocess.call(['touch', 'jsoncatalog.txt'])
 	meta = open('jsoncatalog.txt', 'a')
 
 	def buildMeta(count):
-		root = ET.fromstring(readFolder(count, "/data/MHL/MHL_download/mhl_meta_xml_files", xfiles))
+		root = ET.fromstring(readFolder(count, "/data/MHL/MHL_Bookworm/samples/meta", xfiles))
 		
 
 		#required tags
 		for identifier in root.findall('identifier'):
 			filename = identifier.text
-			print filename  #debugging purposes
+			print filename
 		for arlink in root.findall('identifier-access'):
 			searchstring = arlink.text
 
@@ -76,8 +80,6 @@ def makeMeta(count):
 			#if (i.e. 1822-1946), take last four digits
 			if date.text[-4:].isdigit():
 				year = date.text[-4:]
-
-
 
 			#i.e. 1922-26 -> 1926
 			elif date.text[-2:].isdigit() and not(date.text[-3:].isdigit()):
@@ -97,45 +99,19 @@ def makeMeta(count):
 				language = language.text
 
 		#write json object to file
-
-		try:
-
-			jdict = {"library" : library, 
-					 "searchstring" : searchstring,
-					 "filename" : filename,
-					 "language" : language,
-					 "year" : year,
-					}
-
-
-		except UnboundLocalError as e:
-			#finds which variable is not defined, makes that variable an empty string
-			varErr = str(e)
-			varErr = re.findall(r"'(.*?)'", varErr, re.DOTALL)
-			print varErr
-
-			# this is a temporary solution. need to talk to ben about this one
-			# what would happen if bookworm had missing data
-			# tried to have it skip cases w/o data, but still got unbound error
-			jdict = {"library" : ("" if varErr == "['library']" else ""),
-					 "searchstring" : ("" if varErr == "['searchstring']" else ""),
-					 "filename" : filename,
-					 "language" : ("" if varErr == "['language']" else ""),
-					 "year" : ("" if varErr == "['year']" else ""),
-					}
-					#might run into trouble if a file is missing TWO things
-					
-
+		jdict = {"library" : library, 
+				 "searchstring" : searchstring,
+				 "filename" : filename,
+				 "language" : language,
+				 "year" : year,
+				}
 		json = str(jdict)
-
-		#may do if except:
-		#jdict = {"searchstring: searchstring, "filename" : filename}
 
 		print "writing %s metadata to jsoncatalog.txt..." % filename
 		meta.write(json + '\n')
 
 		#recursion
-		if count < 3000:
+		if count < ((len(xfiles)) -1):
 			count = count + 1
 			buildMeta(count)
 		else:
@@ -144,8 +120,8 @@ def makeMeta(count):
 	buildMeta(count)
 
 
-
 makeMeta(0)
-makeInput(0)
+
+#makeInput(0)
 
 		
