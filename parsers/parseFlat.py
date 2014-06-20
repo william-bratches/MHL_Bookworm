@@ -45,11 +45,11 @@ def makeInput(count):
 
 	def buildInput(count):
 		text = re.sub("[\n\r]","", readFolder(count, "/data/MHL/MHL_Bookworm/samples/texts", files))
-		print "writing %s to input.txt" % files[count]
+		print "writing %s to input.txt..." % files[count]
 		inp.write(files[count][:-9] + "    " + text + '\n') #chops off _djvu.txt to get ID
 		if count < ((len(files)) -1):
 			count = count + 1
-			buildData(count)
+			buildInput(count)
 		else:
 			print "input.txt done building!"	
 	buildInput(count)
@@ -65,14 +65,58 @@ def makeMeta(count):
 	meta = open('jsoncatalog.txt', 'a')
 
 	def buildMeta(count):
-		doc = ET.parse(readFolder(count, "/data/MHL/MHL_Bookworm/samples/meta", xfiles))
-		root = doc.getroot()
-		#define pieces of data to grab
-		print root.tag
-		for child in root:
-			print child.tag, child.attrib
-		#year = for date in xml.findall('date')
-  		#		print(atype.get('foobar'))
+		root = ET.fromstring(readFolder(count, "/data/MHL/MHL_Bookworm/samples/meta", xfiles))
+		
+
+		#required tags
+		for identifier in root.findall('identifier'):
+			filename = identifier.text
+			print filename
+		for arlink in root.findall('identifier-access'):
+			searchstring = arlink.text
+
+		#optional tags to extract
+		for date in root.findall('date'):
+			#if (i.e. 1822-1946), take last four digits
+			if date.text[-4:].isdigit():
+				year = date.text[-4:]
+
+			#i.e. 1922-26 -> 1926
+			elif date.text[-2:].isdigit():
+				year = date.text[:2] + date.text[-2:]
+
+			else:
+				#take first four characters for any other inconsistency
+				year = date.text[:4]
+
+		for contributor in root.findall('contributor'):
+			library = contributor.text
+
+		for language in root.findall('language'):
+			if language.text == "eng":
+				language = "english"
+			else:
+				language = language.text
+
+		#write json object to file
+		jdict = {"library" : library, 
+				 "searchstring" : searchstring,
+				 "filename" : filename,
+				 "language" : language,
+				 "year" : year,
+				}
+		json = str(jdict)
+
+		print "writing %s metadata to jsoncatalog.txt..." % filename
+		meta.write(json + '\n')
+
+		#recursion
+		if count < ((len(xfiles)) -1):
+			count = count + 1
+			buildMeta(count)
+		else:
+			print "jsoncatalog.txt done building!"
+
 	buildMeta(count)
 
 
