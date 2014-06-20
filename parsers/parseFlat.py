@@ -16,8 +16,9 @@ from xml.dom.minidom import parseString
 import re
 import os, sys
 import subprocess
-#from lxml import etree
+import xml.etree.ElementTree as ET
 #may not need some of these, preserve memory
+
 
 #navigate a folder, create array with all files and file globalId
 def parseFolder(folder, extension):
@@ -29,63 +30,54 @@ def parseFolder(folder, extension):
 
 
 #open the appropriate file, pull its contents
-def readInput(count, folder, files):
+def readFolder(count, folder, files):
 	file = open((os.path.join(folder, files[count])), 'r')
 	data = file.read()
 	file.close()
 	return data
 
-
 #put file contents into input.txt, recur through entire folder
-def buildInput(count):
+def makeInput(count):
+	print "building input.txt..."
 	files = parseFolder("/data/MHL/MHL_Bookworm/samples/texts", '_djvu.txt')
 	subprocess.call(['touch', 'input.txt'])
 	inp = open('input.txt', 'a')
 
-	def buildData(count):
-		text = re.sub("[\n\r]","", readInput(count, "/data/MHL/MHL_Bookworm/samples/texts", files))
+	def buildInput(count):
+		text = re.sub("[\n\r]","", readFolder(count, "/data/MHL/MHL_Bookworm/samples/texts", files))
 		print "writing %s to input.txt" % files[count]
-		inp.write(files[count][:-9] + "    " + text + '\n') #chops off _djvu.txt for global identification
+		inp.write(files[count][:-9] + "    " + text + '\n') #chops off _djvu.txt to get ID
 		if count < ((len(files)) -1):
 			count = count + 1
 			buildData(count)
 		else:
-			print "files done building!"	
-	buildData(count)
+			print "input.txt done building!"	
+	buildInput(count)
 	inp.close()
 
 
+#build jsoncatalog.txt
+#first pass: year, library, language
+def makeMeta(count):
+	print "building jsoncatalog.txt..."
+	xfiles = parseFolder("/data/MHL/MHL_Bookworm/samples/meta", '_meta.xml')
+	subprocess.call(['touch', 'jsoncatalog.txt'])
+	meta = open('jsoncatalog.txt', 'a')
 
-buildInput(0)
-
-"""
-#might need a system of extracting global IDs, matching them against jsoncatalog.txt
-
-#build metadata entries
-
-def parseMetadata(info, dataNum):
-    root = etree.fromstring(jdata)
- subprocess.call(['touch', 'jsoncatalog.txt'])
- jtxt = open('jsoncatalog.txt', 'w')
-    #tags to search go here
-    for element in root.iter("date")
-        jtxt.write("{ date: ") + '"' element.items()) #tag needs to be stripped
-        + '", "filename:" ' + globalId + "searchstring:" + url + "}"    #better way to do this?
-    for element in root.iter("contributor")
-                                    #same code for contributor tag tag
-               jtxt.close()
-
-
- parseMetadata()
-readJSON()
+	def buildMeta(count):
+		doc = ET.parse(readFolder(count, "/data/MHL/MHL_Bookworm/samples/meta", xfiles))
+		root = doc.getroot()
+		#define pieces of data to grab
+		print root.tag
+		for child in root:
+			print child.tag, child.attrib
+		#year = for date in xml.findall('date')
+  		#		print(atype.get('foobar'))
+	buildMeta(count)
 
 
-#recursion --> next folder in array
-#def recur(count):
-	
+makeMeta(0)
+
+#makeInput(0)
+
 		
-
-
-#initialization
-#progress indicator?
-"""
