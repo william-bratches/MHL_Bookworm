@@ -123,12 +123,10 @@ def makeMeta(count):
 		for language in root.findall('language'):
 			if language.text == "eng":
 				language = "english"
-
 			elif language.text == "ger":
 				language = "german"
-			#can use a dictionary here if list grows extensively
 			elif language.text == "fre":
-				lanauge = "french"
+				langauge = "french"
 			else:
 				language = language.text
 		#hacked-in error handling/debugging
