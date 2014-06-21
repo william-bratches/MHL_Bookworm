@@ -68,19 +68,25 @@ def makeMeta(count):
 		#required tags
 		for identifier in root.findall('identifier'):
 			filename = identifier.text
-			print filename  #debugging purposes
+			print filename
 		for arlink in root.findall('identifier-access'):
 			searchstring = arlink.text
+		#hacked-in error handling/debugging; elegant nested solutions did not work
+		if 'searchstring' in locals():
+			print "searchstring exists"
+		else:
+			searchstring = ""
 
 		#optional tags to extract
+		"""note: I have hacked in some robust error handling, normal nested solutions like 'if x is None' 
+			failed to work. I will improve the elegance  of this after I compile a working database."""
+		#date: handles inconsistent formatting
 		for date in root.findall('date'):
 			
 			try:
 				#if (i.e. 1822-1946), take last four digits
 				if date.text[-4:].isdigit():
 					year = date.text[-4:]
-
-
 
 				#i.e. 1922-26 -> 1926
 				elif date.text[-2:].isdigit() and not(date.text[-3:].isdigit()):
@@ -91,54 +97,55 @@ def makeMeta(count):
 					year = date.text[:4]
 			except TypeError:
 				year = ""
+		#hacked-in error handling/debugging
+		if 'year' in locals():
+			print "year exists"
+		else:
+			year = ""
 
-		for contributor in root.findall('contributor'):
-			library = contributor.text
 
+		
+		#contributing library: occasionally does not exist
+		try:
+			for contributor in root.find('contributor'):
+				library = library.text
+
+		except TypeError:
+			library = ""
+		#hacked-in error handling/debugging
+		if 'library' in locals():
+			print "library exists"
+		else:
+			library = ""
+
+
+		#language
 		for language in root.findall('language'):
 			if language.text == "eng":
 				language = "english"
 
-			elif language.tex == "ger"
+			elif language.text == "ger":
 				language = "german"
-				
+			#can use a dictionary here if list grows extensively
+			elif language.text == "fre":
+				lanauge = "french"
 			else:
 				language = language.text
+		#hacked-in error handling/debugging
+		if 'language' in locals():
+			print "language exists"
+		else:
+			language = ""
 
 		#write json object to file
-
-		try:
-
-			jdict = {"library" : library, 
-					 "searchstring" : searchstring,
-					 "filename" : filename,
-					 "language" : language,
-					 "year" : year,
-					}
-
-
-		except UnboundLocalError as e:
-			#finds which variable is not defined, makes that variable an empty string
-			varErr = str(e)
-			varErr = re.findall(r"'(.*?)'", varErr, re.DOTALL)
-			print varErr
-
-			# this is a temporary solution. need to talk to ben about this one
-			# what would happen if bookworm had missing data
-			# tried to have it skip cases w/o data, but still got unbound error
-			jdict = {"library" : ("" if varErr == "['library']" else ""),
-					 "searchstring" : ("" if varErr == "['searchstring']" else ""),
-					 "filename" : filename,
-					 "language" : ("" if varErr == "['language']" else ""),
-					 "year" : ("" if varErr == "['year']" else ""),
-					}
-					#might run into trouble if a file is missing TWO things
-					
+		jdict = {"library" : library, 
+				 "searchstring" : searchstring,
+				 "filename" : filename,
+				 "language" : language,
+				 "year" : year,
+				}
 
 		json = str(jdict)
-
-		#may do if except:
-		#jdict = {"searchstring: searchstring, "filename" : filename}
 
 		print "writing %s metadata to jsoncatalog.txt..." % filename
 		meta.write(json + '\n')
