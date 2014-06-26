@@ -43,7 +43,7 @@ def makeInput(count):
 		inp.write(files[count][:-9] + "    " + text + '\n') #chops off _djvu.txt to get ID
 
 		#recursion
-		if count < 3000:
+		if count < 200:
 			count = count + 1
 			buildInput(count)
 		else:
@@ -121,14 +121,7 @@ def makeMeta(count):
 
 		#language
 		for language in root.findall('language'):
-			if language.text == "eng":
-				language = "english"
-			elif language.text == "ger":
-				language = "german"
-			elif language.text == "fre":
-				langauge = "french"
-			else:
-				language = language.text
+			language = language.text
 		#hacked-in error handling/debugging
 		if 'language' in locals():
 			print "language exists"
@@ -137,19 +130,25 @@ def makeMeta(count):
 
 		#write json object to file
 		jdict = {"library" : library, 
-				 "searchstring" : searchstring,
+				 "searchstring" : "[No author], <em>" + filename +
+				 "</em> (undated) <a href=" + r"\"" + 
+				 searchstring + r"\"" + ">read</a>",
+				 #TODO: expand searchsring to include proper author and title
 				 "filename" : filename,
 				 "language" : language,
 				 "year" : year,
 				}
 
 		json = str(jdict)
+		json = json.replace("'", '"')
+		#raw string is printing double backslashes - quick fix
+		json = json.replace('\\"', '\"')
 
 		print "writing %s metadata to jsoncatalog.txt..." % filename
 		meta.write(json + '\n')
 
 		#recursion
-		if count < 3000:
+		if count < 200:
 			count = count + 1
 			buildMeta(count)
 		else:
