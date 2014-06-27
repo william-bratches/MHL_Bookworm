@@ -17,8 +17,12 @@ def buildMarc():
 	xml = open("marctest.xml", "r")
 	xml = xml.read()
 	root = ET.fromstring(xml)
-	for child in root.iter('datafield'):
-		print child
+	for child in root:
+		tag = child.get('tag')
+		if tag == "650":
+			for sub in child:
+				print sub.text
+		
 
 #write json object to file
 jdict = {"library" : "test", 
