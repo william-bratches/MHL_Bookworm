@@ -127,6 +127,12 @@ def makeMeta(count):
 		else:
 			language = ""
 
+
+		"""
+		def buildMarc()
+		#build marc files
+		"""
+
 		#write json object to file
 		jdict = {"library" : library, 
 				 "searchstring" : "[No author], <em>" + filename +
