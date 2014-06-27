@@ -13,7 +13,10 @@ import xml.etree.ElementTree as ET
 from pymarc import MARCReader
 
 
+
+
 def buildMarc():
+	mArray = []
 	xml = open("marctest.xml", "r")
 	xml = xml.read()
 	root = ET.fromstring(xml)
@@ -21,7 +24,9 @@ def buildMarc():
 		tag = child.get('tag')
 		if tag == "650":
 			for sub in child:
-				print sub.text
+				mArray.append(sub.text)
+				print mArray
+	return mArray
 		
 
 #write json object to file
@@ -33,6 +38,7 @@ jdict = {"library" : "test",
 				 "filename" : "testname",
 				 "language" : "eng",
 				 "year" : "2014",
+				 "subject" : buildMarc(),
 				}
 
 json = str(jdict)
@@ -41,7 +47,6 @@ json = json.replace("'", '"')
 json = json.replace('\\"', '\"')
 
 #print "writing %s metadata to jsoncatalog.txt..." % "test"
-buildMarc()
-#print jdict
+print jdict
 
 		
