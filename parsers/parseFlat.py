@@ -30,36 +30,39 @@ def readFolder(count, folder, files):
 	file.close()
 	return data
 
-#put file contents into input.txt, recur through entire folder
+#make input.txt, set the directory to be parsed
 def makeInput(count):
 	print "building input.txt..."
 	files = parseFolder("/data/MHL/MHL_download/mhl_djvu_txt_files", '_djvu.txt')
 	subprocess.call(['touch', 'input.txt'])
 	inp = open('input.txt', 'a')
 
+	#put file contents into input.txt, recur through entire folder
 	def buildInput(count):
 		text = re.sub("[\n\r]","", readFolder(count, "/data/MHL/MHL_download/mhl_djvu_txt_files", files))
 		print "writing %s to input.txt..." % files[count]
-		inp.write(files[count][:-9] + "   " + text + '\n') #chops off _djvu.txt to get ID
+		inp.write(files[count][:-9] + "\t" + text + '\n') #chops off _djvu.txt to get ID
+
 		#recursion
-		if count < 100:
+		if count < 5:
 			count = count + 1
 			buildInput(count)
 		else:
-			print "input.txt done building!"	
+			print "\n input.txt done building! \n"	
 
 	buildInput(count)
 	inp.close()
 
 
+
 #build jsoncatalog.txt
-#first pass: year, library, language
 def makeMeta(count):
 	print "building jsoncatalog.txt..."
 	xfiles = parseFolder("/data/MHL/MHL_download/mhl_meta_xml_files", '_meta.xml')
 	subprocess.call(['touch', 'jsoncatalog.txt'])
 	meta = open('jsoncatalog.txt', 'a')
 
+	#extract XML, MARC tags, place in jsoncatalog.txt
 	def buildMeta(count):
 		root = ET.fromstring(readFolder(count, "/data/MHL/MHL_download/mhl_meta_xml_files", xfiles))
 		
@@ -67,18 +70,22 @@ def makeMeta(count):
 		#required tags
 		for identifier in root.findall('identifier'):
 			filename = identifier.text
-			print filename
+			#print filename #debugging
 		for arlink in root.findall('identifier-access'):
 			searchstring = arlink.text
-		#hacked-in error handling/debugging; elegant nested solutions did not work
+		#hacked error handling
 		if 'searchstring' in locals():
 			print "searchstring exists"
 		else:
 			searchstring = ""
+			print "WARNING: searchstring missing"
+
+
 
 		#optional tags to extract
-		"""note: I have hacked in some robust error handling, normal nested solutions like 'if x is None' 
-			failed to work. I will improve the elegance  of this after I compile a working database."""
+			"""note: I have hacked in some robust error handling, there were scope issues with
+			more elegant solutions, so for now it is reliable brute force. Apologies for the mess,
+			I am aware that this is bad coding, and hope to clean it up later"""
 		#date: handles inconsistent formatting
 		for date in root.findall('date'):
 			
@@ -96,49 +103,70 @@ def makeMeta(count):
 					year = date.text[:4]
 			except TypeError:
 				year = ""
-		#hacked-in error handling/debugging
+		#hacked error handling
 		if 'year' in locals():
 			print "year exists"
 		else:
 			year = ""
+			print "WARNING: year missing"
 
 
 		
-		#contributing library: occasionally does not exist
+		#contributing library
 		try:
 			for contributor in root.find('contributor'):
 				library = library.text
 
 		except TypeError:
 			library = ""
-		#hacked-in error handling/debugging
+		#hacked error handling
 		if 'library' in locals():
-			print "library exists"
+				print "library exists"
 		else:
 			library = ""
+			print "WARNING: library missing"
 
 
 		#language
 		for language in root.findall('language'):
 			language = language.text
-		#hacked-in error handling/debugging
+		#hacked error handling
 		if 'language' in locals():
 			print "language exists"
 		else:
 			language = ""
 
 
+
+		#title
+		for title in root.findall('title'):
+			title = title.text
+		#sets title to filename if it does not exist
+		if 'title' in locals():
+			print "title exists"
+		else:
+			title = filename
+
+		#author
+		for creator in root.findall('creator'):
+			author = creator.text
+		if 'author' in locals():
+			print "author exists"
+		else:
+			author = ""
+			print "WARNING: author missing"
+
+
 		"""
 		def buildMarc()
-		#build marc files
+		#build marc files here
 		"""
 
 		#write json object to file
 		jdict = {"library" : library, 
-				 "searchstring" : "[No author], <em>" + filename +
-				 "</em> (undated) <a href=" + r"\"" + 
+				 "searchstring" : "[" + author + "], <em>" + title +
+				 "</em> (" + year + ") <a href=" + r"\"" + 
 				 searchstring + r"\"" + ">read</a>",
-				 #TODO: expand searchsring to include proper author and title
 				 "filename" : filename,
 				 "language" : language,
 				 "year" : year,
@@ -153,11 +181,11 @@ def makeMeta(count):
 		meta.write(json + '\n')
 
 		#recursion
-		if count < 100:
+		if count < 5:
 			count = count + 1
 			buildMeta(count)
 		else:
-			print "jsoncatalog.txt done building!"
+			print "\n jsoncatalog.txt done building! \n"
 
 	buildMeta(count)
 
