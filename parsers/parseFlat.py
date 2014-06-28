@@ -5,9 +5,8 @@
 
 #build core files for Presidio database
 
-from xml.dom.minidom import parseString
-import inspect
 import re
+import string
 import os, sys
 import subprocess
 import xml.etree.ElementTree as ET
@@ -45,7 +44,7 @@ def makeInput(count):
 		inp.write(files[count][:-9] + "\t" + text + '\n') #chops off _djvu.txt to get ID
 
 		#recursion
-		if count < 5:
+		if count < 40:
 			count = count + 1
 			buildInput(count)
 		else:
@@ -67,17 +66,10 @@ def makeMeta(count):
 		root = ET.fromstring(readFolder(count, "/data/MHL/MHL_download/mhl_meta_xml_files", xfiles))
 
 
-		#required tags
+		#filename
 		for identifier in root.findall('identifier'):
 			filename = identifier.text
 			#print filename #debugging
-		for arlink in root.findall('identifier-access'):
-			searchstring = arlink.text
-		#hacked error handling
-		if 'searchstring' in locals():
-			pass
-		else:
-			searchstring = ""
 
 
 
@@ -86,7 +78,7 @@ def makeMeta(count):
 			   more elegant solutions, and it would require dynamically named variables,
 			   so for now it is reliable brute force. Apologies for the mess,
 			   I am aware that this is bad coding, and hope to clean it up later"""
-			   
+
 		#date: handles inconsistent formatting
 		for date in root.findall('date'):
 			
@@ -126,7 +118,6 @@ def makeMeta(count):
 			library = ""
 			
 
-
 		#language
 		for language in root.findall('language'):
 			language = language.text
@@ -137,13 +128,14 @@ def makeMeta(count):
 			language = ""
 
 
-
 		#title
 		for title in root.findall('title'):
 			title = title.text
 		#sets title to filename if it does not exist
 		if 'title' in locals():
-			pass
+			title = filter(lambda x: x in string.printable, title)
+			title = title.replace('"', '')
+			title = title.replace("'", "")
 		else:
 			title = filename
 
@@ -154,22 +146,39 @@ def makeMeta(count):
 			pass
 		else:
 			author = ""
-	
+		#the above XML elements could be potentially abstracted into a single function
+
+		#searchstring
+		for arlink in root.findall('identifier-access'):
+			searchstring = arlink.text
+			searchstring = "[" + author + "], <em>" + title + \
+				 			"</em> (" + year + ") <a href=" + r"\"" + \
+							 searchstring + r"\"" + ">read</a>"
+			searchstring = searchstring.encode('ascii','ignore')
+
+		#hacked error handling
+		if 'searchstring' in locals():
+			pass
+		else:
+			searchstring = ""
 
 
-		"""
-		def buildMarc()
-		#build marc files here
-		"""
+		#subject
+		subjectArray = []
+		for subject in root.iter('subject'):
+			#splits and clean into individual words for hopefully more uniform subject searches
+			subArray = subject.text.split()
+			subjectArray.append(subject.text)
+			for word in subArray:
+				subjectArray.append(word)
 
 		#write json object to file
-		jdict = {"library" : library, 
-				 "searchstring" : "[" + author + "], <em>" + title +
-				 "</em> (" + year + ") <a href=" + r"\"" + 
-				 searchstring + r"\"" + ">read</a>",
+		jdict = {"library" : library,
+				 "searchstring" : searchstring,
 				 "filename" : filename,
 				 "language" : language,
 				 "year" : year,
+				 "subject" : subjectArray,
 				}
 
 		json = str(jdict)
@@ -181,7 +190,7 @@ def makeMeta(count):
 		meta.write(json + '\n')
 
 		#recursion
-		if count < 5:
+		if count < 40:
 			count = count + 1
 			buildMeta(count)
 		else:
