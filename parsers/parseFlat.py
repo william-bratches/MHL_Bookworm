@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
-"""this parser is designed to specifically grab a test database of 3000 books"""
+"""This is the master parsing file. It will take a folder of raw texts, metadata, and marcXML
+	and construct the necessary input.txt and jsoncatalog.txt for Presidio to compile."""
 
 #build core files for Presidio database
 
@@ -54,7 +55,6 @@ def makeInput(count):
 	inp.close()
 
 
-
 #build jsoncatalog.txt
 def makeMeta(count):
 	print "building jsoncatalog.txt..."
@@ -65,7 +65,7 @@ def makeMeta(count):
 	#extract XML, MARC tags, place in jsoncatalog.txt
 	def buildMeta(count):
 		root = ET.fromstring(readFolder(count, "/data/MHL/MHL_download/mhl_meta_xml_files", xfiles))
-		
+
 
 		#required tags
 		for identifier in root.findall('identifier'):
@@ -75,17 +75,18 @@ def makeMeta(count):
 			searchstring = arlink.text
 		#hacked error handling
 		if 'searchstring' in locals():
-			print "searchstring exists"
+			pass
 		else:
 			searchstring = ""
-			print "WARNING: searchstring missing"
 
 
 
 		#optional tags to extract
 			"""note: I have hacked in some robust error handling, there were scope issues with
-			more elegant solutions, so for now it is reliable brute force. Apologies for the mess,
-			I am aware that this is bad coding, and hope to clean it up later"""
+			   more elegant solutions, and it would require dynamically named variables,
+			   so for now it is reliable brute force. Apologies for the mess,
+			   I am aware that this is bad coding, and hope to clean it up later"""
+			   
 		#date: handles inconsistent formatting
 		for date in root.findall('date'):
 			
@@ -105,10 +106,9 @@ def makeMeta(count):
 				year = ""
 		#hacked error handling
 		if 'year' in locals():
-			print "year exists"
+			pass
 		else:
 			year = ""
-			print "WARNING: year missing"
 
 
 		
@@ -121,10 +121,10 @@ def makeMeta(count):
 			library = ""
 		#hacked error handling
 		if 'library' in locals():
-				print "library exists"
+			pass
 		else:
 			library = ""
-			print "WARNING: library missing"
+			
 
 
 		#language
@@ -132,7 +132,7 @@ def makeMeta(count):
 			language = language.text
 		#hacked error handling
 		if 'language' in locals():
-			print "language exists"
+			pass
 		else:
 			language = ""
 
@@ -143,7 +143,7 @@ def makeMeta(count):
 			title = title.text
 		#sets title to filename if it does not exist
 		if 'title' in locals():
-			print "title exists"
+			pass
 		else:
 			title = filename
 
@@ -151,10 +151,10 @@ def makeMeta(count):
 		for creator in root.findall('creator'):
 			author = creator.text
 		if 'author' in locals():
-			print "author exists"
+			pass
 		else:
 			author = ""
-			print "WARNING: author missing"
+	
 
 
 		"""
