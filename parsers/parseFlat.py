@@ -11,7 +11,7 @@ import os, sys
 import subprocess
 import xml.etree.ElementTree as ET
 #may not need some of these, preserve memory
-sys.setrecursionlimit(3500)
+sys.setrecursionlimit(60000)
 
 
 #navigate a folder, create array with all files and file globalId
@@ -44,7 +44,7 @@ def makeInput(count):
 		inp.write(files[count][:-9] + "\t" + text + '\n') #chops off _djvu.txt to get ID
 
 		#recursion
-		if count < 40:
+		if count < ((len(files)) -1):
 			count = count + 1
 			buildInput(count)
 		else:
@@ -106,8 +106,8 @@ def makeMeta(count):
 		
 		#contributing library
 		try:
-			for contributor in root.find('contributor'):
-				library = library.text
+			for contributor in root.findall('contributor'):
+				library = contributor.text
 
 		except TypeError:
 			library = ""
@@ -166,11 +166,19 @@ def makeMeta(count):
 		#subject
 		subjectArray = []
 		for subject in root.iter('subject'):
-			#splits and clean into individual words for hopefully more uniform subject searches
+			stext = subject.text.replace(',', '-')
+			subjectArray.append(stext)
+
+			#splits and clean into individual words for more uniform subject searches
+			subArray = stext = subject.text.replace(',', '')
+			subArray = stext = subject.text.replace(' of ', ' ')
+			subArray = stext = subject.text.replace(' as ', ' ')
 			subArray = subject.text.split()
-			subjectArray.append(subject.text)
 			for word in subArray:
 				subjectArray.append(word)
+			print subjectArray
+	
+
 
 		#write json object to file
 		jdict = {"library" : library,
@@ -190,7 +198,7 @@ def makeMeta(count):
 		meta.write(json + '\n')
 
 		#recursion
-		if count < 40:
+		if count < 300: #((len(xfiles)) -1):
 			count = count + 1
 			buildMeta(count)
 		else:
@@ -201,6 +209,6 @@ def makeMeta(count):
 
 
 makeMeta(0)
-makeInput(0)
+#makeInput(0)
 
 		
