@@ -41,6 +41,7 @@ def makeInput(count):
 	def buildInput(count):
 		text = re.sub("[\n\r]","", readFolder(count, "/data/MHL/MHL_download/mhl_djvu_txt_files", files))
 		print "writing %s to input.txt..." % files[count]
+		print count
 		inp.write(files[count][:-9] + "\t" + text + '\n') #chops off _djvu.txt to get ID
 
 		#recursion
@@ -166,17 +167,22 @@ def makeMeta(count):
 		#subject
 		subjectArray = []
 		for subject in root.iter('subject'):
-			stext = subject.text.replace(',', '-')
-			subjectArray.append(stext)
+			subject = subject.text
+			if subject is not None:
+				stext = subject.replace(',', '-')
+				stext = subject.replace('"', '')
+				subjectArray.append(stext)
 
-			#splits and clean into individual words for more uniform subject searches
-			subArray = stext = subject.text.replace(',', '')
-			subArray = stext = subject.text.replace(' of ', ' ')
-			subArray = stext = subject.text.replace(' as ', ' ')
-			subArray = subject.text.split()
-			for word in subArray:
-				subjectArray.append(word)
-			print subjectArray
+				#splits and clean into individual words for more uniform subject searches
+				subArray = subject.replace(',', '')
+				subArray = subject.replace(' of ', ' ')
+				subArray = subject.replace(' as ', ' ')
+				subArray = subject.replace('"', '')
+				subArray = subject.split()
+				for word in subArray:
+					subjectArray.append(word)
+			else:
+				subjectArray = ""
 	
 
 
@@ -198,7 +204,7 @@ def makeMeta(count):
 		meta.write(json + '\n')
 
 		#recursion
-		if count < 300: #((len(xfiles)) -1):
+		if count < ((len(xfiles)) -1):
 			count = count + 1
 			buildMeta(count)
 		else:
@@ -208,7 +214,7 @@ def makeMeta(count):
 
 
 
-makeMeta(0)
-#makeInput(0)
+#makeMeta(0)
+makeInput(41032)
 
 		
