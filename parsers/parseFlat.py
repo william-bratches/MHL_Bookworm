@@ -174,13 +174,30 @@ def makeMeta(count):
 				subjectArray.append(stext)
 
 				#splits and clean into individual words for more uniform subject searches
+				#this can all probably be done by converting to ASCII, will test
+				#can also be consolidated with a dictionary
 				subArray = subject.replace(',', '')
 				subArray = subject.replace(' of ', ' ')
 				subArray = subject.replace(' as ', ' ')
 				subArray = subject.replace('"', '')
 				subArray = subject.split()
+
 				for word in subArray:
-					subjectArray.append(word)
+					cleanWord = word.replace(',', '')
+					cleanWord = word.replace(';', '')
+					cleanWord = word.replace('(', '')
+					cleanWord = word.replace(')', '')
+					cleanWord = word.replace('.', '')
+					if cleanWord=="to":
+						cleanWord = ""
+					if cleanWord=="as":
+						cleanWord = ""
+					if cleanWord=="if":
+						cleanWord = ""
+					if cleanWord=="II":
+						cleanWord = ""
+					cleanWord = cleanWord.lower().capitalize()
+					subjectArray.append(cleanWord)
 			else:
 				subjectArray = ""
 	
@@ -214,7 +231,7 @@ def makeMeta(count):
 
 
 
-#makeMeta(0)
-makeInput(41032)
+makeMeta(0)
+#makeInput(0)
 
 		
