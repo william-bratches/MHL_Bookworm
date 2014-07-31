@@ -14,6 +14,20 @@ import xml.etree.ElementTree as ET
 sys.setrecursionlimit(60000)
 
 
+def parseFolder(folder, extension):
+    files = []
+    for item in os.listdir(folder):
+        if (os.path.isfile(os.path.join(folder, item))):
+            files.append(item)
+    return files
+
+
+#open the appropriate file, pull its contents
+def readFolder(count, folder, files):
+	file = open((os.path.join(folder, files[count])), 'r')
+	data = file.read()
+	file.close()
+	return data
 
 #build jsoncatalog.txt
 def makeMeta(count):
@@ -131,33 +145,27 @@ def makeMeta(count):
 			if subject is not None:
 				stext = subject.replace(',', '-')
 				stext = subject.replace('"', '')
+				subArray = subject.split()
 				subjectArray.append(stext)
 
 				#splits and clean into individual words for more uniform subject searches
 				#this can all probably be done by converting to ASCII, will test
 				#can also be consolidated with a dictionary
-				subArray = subject.replace(',', '')
-				subArray = subject.replace(' of ', ' ')
-				subArray = subject.replace(' as ', ' ')
-				subArray = subject.replace('"', '')
-				subArray = subject.split()
+				
 
 				for word in subArray:
-					cleanWord = word.replace(',', '')
-					cleanWord = word.replace(';', '')
-					cleanWord = word.replace('(', '')
-					cleanWord = word.replace(')', '')
-					cleanWord = word.replace('.', '')
-					if cleanWord=="to":
-						cleanWord = ""
-					if cleanWord=="as":
-						cleanWord = ""
-					if cleanWord=="if":
-						cleanWord = ""
-					if cleanWord=="II":
-						cleanWord = ""
-					cleanWord = cleanWord.lower().capitalize()
-					subjectArray.append(cleanWord)
+					rx = re.compile('\W+')
+					cleanWord = rx.sub(' ', word).strip()
+					if cleanWord[:4].isdigit():
+						pass
+					elif len(cleanWord) < 3:
+						pass
+					elif cleanWord=="and"
+						pass
+					else:
+						cleanWord = cleanWord.lower().capitalize()
+						print cleanWord
+						subjectArray.append(cleanWord)
 			else:
 				subjectArray = ""
 	

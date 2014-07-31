@@ -38,13 +38,14 @@ def makeInput(count, end):
 
 		elif count < end:
 			"Chunk at %i finished, building next..." % count
+			del text #free memory
 
 		else:
 			print "\n input.txt done building! \n"	
 
 	buildInput(count, end)
 	inp.close()
-	del files
+	del files #free memory
 
 makeInput(0, 20000)
 makeInput(20000, 40000)
