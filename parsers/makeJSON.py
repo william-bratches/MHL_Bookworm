@@ -96,6 +96,9 @@ def makeMeta(count):
 		#language
 		for language in root.findall('language'):
 			language = language.text
+
+			if language=="English": #MHL database inconsistency
+				language = "eng"
 		#hacked error handling
 		if 'language' in locals():
 			pass
@@ -138,7 +141,7 @@ def makeMeta(count):
 			searchstring = ""
 
 
-		#subject
+		#subjects
 		subjectArray = []
 		for subject in root.iter('subject'):
 			subject = subject.text
@@ -148,11 +151,7 @@ def makeMeta(count):
 				subArray = subject.split()
 				subjectArray.append(stext)
 
-				#splits and clean into individual words for more uniform subject searches
-				#this can all probably be done by converting to ASCII, will test
-				#can also be consolidated with a dictionary
-				
-
+				#cleans up the words i.e. semicolons will not appear as subjects
 				for word in subArray:
 					rx = re.compile('\W+')
 					cleanWord = rx.sub(' ', word).strip()
@@ -160,11 +159,10 @@ def makeMeta(count):
 						pass
 					elif len(cleanWord) < 3:
 						pass
-					elif cleanWord=="and"
+					elif cleanWord=="and":
 						pass
 					else:
 						cleanWord = cleanWord.lower().capitalize()
-						print cleanWord
 						subjectArray.append(cleanWord)
 			else:
 				subjectArray = ""

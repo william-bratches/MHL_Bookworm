@@ -1,5 +1,8 @@
 import subprocess
 import os, sys
+import re
+
+sys.setrecursionlimit(60000)
 
 #navigate a folder, create array with all files and file globalId
 def parseFolder(folder, extension):
@@ -33,8 +36,8 @@ def makeInput(count, end):
 
 		#recursion
 		if count < ((len(files)) -1):
-			count++
-			buildInput(count)
+			count = count + 1
+			buildInput(count, end)
 
 		elif count < end:
 			"Chunk at %i finished, building next..." % count
@@ -45,9 +48,10 @@ def makeInput(count, end):
 
 	buildInput(count, end)
 	inp.close()
-	del files #free memory
 
 makeInput(0, 20000)
+del files
 makeInput(20000, 40000)
+del files
 makeInput(40000, 60000)
 
