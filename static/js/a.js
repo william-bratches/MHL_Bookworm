@@ -556,9 +556,6 @@
            }
       };
 
-      //first element may be blank, but if two second element will be "" as well
-      //must make them ALL have nothing
-      //use a for loop?
       console.log(query);
       $("#permalink").find("input").val(permQuery());
       $("#chart").html("");
