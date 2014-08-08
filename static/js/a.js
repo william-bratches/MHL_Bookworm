@@ -546,14 +546,20 @@
         return false;
       }
       query = buildQuery();
-      console.log(query);
+    
 
       //returns entire set if blank
-      if (query.search_limits[0].word[0] === "") {
-        query.search_limits[0].word.length = 0;
-      }
+      var arrayLength = query.search_limits.length;
+      for (var i = 0; i < arrayLength; i++) {
+        if (query.search_limits[i].word[0] === "") {
+        query.search_limits[i].word.length = 0;
+           }
+      };
 
-      console.log(query.search_limits[0].word[0]);
+      //first element may be blank, but if two second element will be "" as well
+      //must make them ALL have nothing
+      //use a for loop?
+      console.log(query);
       $("#permalink").find("input").val(permQuery());
       $("#chart").html("");
       $("#chart").addClass("loading");
