@@ -90,7 +90,7 @@ def makeMeta(count):
 		if 'library' in locals():
 			pass
 		else:
-			library = ""
+			library = "Other"
 			
 
 		#language
@@ -161,11 +161,13 @@ def makeMeta(count):
 						pass
 					elif cleanWord=="and":
 						pass
+					elif cleanWord=="for":
+						pass
 					else:
 						cleanWord = cleanWord.lower().capitalize()
 						subjectArray.append(cleanWord)
 			else:
-				subjectArray = ""
+				subjectArray = "Miscellaneous"
 	
 
 
