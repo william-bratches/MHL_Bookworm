@@ -63,7 +63,7 @@ def makeMeta(count):
 					year = date.text[-4:]
 
 				#i.e. 1922-26 -> 1926
-				elif date.text[-2:].isdigit() and not(date.text[-3:].isdigit()):
+				elif date.text[-2:].isdigit() and not(date.text[-3:].isdigit()) and len(date.text) < 8:
 					year = date.text[:2] + date.text[-2:]
 
 				else:
@@ -159,9 +159,16 @@ def makeMeta(count):
 						pass
 					elif len(cleanWord) < 3:
 						pass
+					#should probably make a dictionary
 					elif cleanWord=="and":
 						pass
 					elif cleanWord=="for":
+						pass
+					elif cleanWord=="drug" or "Drug":
+						pass
+					elif cleanWord=="industry" or "Industry":
+						pass
+					elif cleanWord=="system" or "System":
 						pass
 					else:
 						cleanWord = cleanWord.lower().capitalize()
