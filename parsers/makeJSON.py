@@ -14,6 +14,11 @@ import xml.etree.ElementTree as ET
 sys.setrecursionlimit(60000)
 
 
+#class Countdown(object):
+#    def __iter__(self):
+#        for n in [5, 4, 3, 2, 1, 'launch']:
+#            yield n
+
 def parseFolder(folder, extension):
     files = []
     for item in os.listdir(folder):
@@ -113,15 +118,17 @@ def makeMeta(count):
 		if 'title' in locals():
 			title = filter(lambda x: x in string.printable, title)
 			title = title.replace('"', '')
-			title = title.replace("'", "")
+			title = title.replace("'", " ")
 		else:
 			title = filename
 
 		#author
 		for creator in root.findall('creator'):
 			author = creator.text
+
 		if 'author' in locals():
-			pass
+			author= author.replace('"', '')
+			author= author.replace("'", "")
 		else:
 			author = ""
 		#the above XML elements could be potentially abstracted into a single function
@@ -133,6 +140,8 @@ def makeMeta(count):
 				 			"</em> (" + year + ") <a href=" + r"\"" + \
 							 searchstring + r"\"" + ">read</a>"
 			searchstring = searchstring.encode('ascii','ignore')
+			searchstring = searchstring.replace('"', '')
+			searchstring = searchstring.replace("'", " ")
 
 		#hacked error handling
 		if 'searchstring' in locals():
@@ -146,8 +155,10 @@ def makeMeta(count):
 		for subject in root.iter('subject'):
 			subject = subject.text
 			if subject is not None:
+				subject = subject.replace('"', '')
 				stext = subject.replace(',', '-')
-				stext = subject.replace('"', '')
+				stext = stext.replace('"', '')
+				stext = filter(lambda x: x in string.ascii_letters, stext)
 				subArray = subject.split()
 				subjectArray.append(stext)
 
@@ -155,6 +166,7 @@ def makeMeta(count):
 				for word in subArray:
 					rx = re.compile('\W+')
 					cleanWord = rx.sub(' ', word).strip()
+					cleanWord = cleanWord.replace('"', '')
 					if cleanWord[:4].isdigit():
 						pass
 					elif len(cleanWord) < 3:
