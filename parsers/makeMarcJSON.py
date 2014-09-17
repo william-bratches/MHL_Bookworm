@@ -13,65 +13,67 @@ import xml.etree.ElementTree as ET
 #may not need some of these, preserve memory
 sys.setrecursionlimit(60000)
 
-#generator that returns next record in specified folder
+# open files, folders, read them
+class fileHandlers:
 
-class folderWalk:
-	def __init__(self, folder, extension):
-		self.folder = folder
-		self.extension = extension
-
-	def __iter__(self):
-        	return self
-
-	def openDir(folder, extension):
-		for item in os.listdir(folder):
-	    		if (os.path.isfile(os.path.join(folder, item))):
-	        	    return item
-	        	    #combine readItem here
+	def __init__(self, directory):
+		self.directory = directory
 
 
+	#generator that returns next record in specified folder
+	def openDir(self):
+		for file in os.listdir(self.directory):
+	    		if (os.path.isfile(os.path.join(self.directory, file))):
+	        	    yield file
 
-def readItem(item):
-	file = open(item, 'r')
-	data = file.read()
-	file.close()
-	return data
 
+	#reads data within a file
+	def readItem(self, item):
+		file = open((os.path.join(self.directory, item)), 'r')
+		data = file.read()
+		file.close()
+		return data
+
+
+#functions that construct the JSON array
 class Components:
 
 	def __init__(self):
-		#self.marcDir = openDir('/data/MARC', '_marc.xml')
-		#self.xmlDir = openDir('MHL_download/mhl_meta_xml_files', '_meta.xml')
-		#self.marcRoot = ET.fromstring(readItem(self.marcDir))
-		#self.xmlRoot = ET.fromstring(readItem(self.xmlDir))
+		self.marcDir = fileHandlers('/data/MARC')
+		self.xmlDir = fileHandlers('/home/will/MHL_download/mhl_meta_xml_files')
+		self.marcNext = self.marcDir.openDir().next()
+		self.xmlNext = self.xmlDir.openDir().next()
 
-		def getDate(self):
-			pass
+		self.marcRoot = ET.fromstring(self.marcDir.readItem(self.marcNext))
+		self.xmlRoot = ET.fromstring(self.xmlDir.readItem(self.xmlNext))
 
-		def getLibrary(self):
-			pass
+	def getDate(self):
+		pass
 
-		def getLanguage(self):
-			pass
+	def getLibrary(self):
+		pass
 
-		def getTitle(self):
-			pass
+	def getLanguage(self):
+		pass
 
-		def getSearchstring(self):
-			pass
+	def getTitle(self):
+		pass
 
-		def getSubject(self):
-			pass
+	def getSearchstring(self):
+		pass
 
-		def getLocation(self):
-			pass
+	def getSubject(self):
+		pass
+
+	def getLocation(self):
+		pass
 
 
 def main():
-	x = folderWalk()
-	print x.openDir('/data/MARC', '_marc.xml')
-	#buildJSON = Components()
-	#print buildJSON.marcDir
+	buildJSON = Components()
+	print buildJSON.marcDir.openDir().next()
+
+	
 
 main()
 
