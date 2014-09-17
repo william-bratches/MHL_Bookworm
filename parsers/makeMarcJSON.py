@@ -16,7 +16,7 @@ sys.setrecursionlimit(60000)
 # open files, folders, read them
 class fileHandlers:
 
-	def __init__(self, directory):
+	def __init__(self, directory, directoryAlt):
 		self.directory = directory
 
 
@@ -35,18 +35,35 @@ class fileHandlers:
 		return data
 
 
+	#MARC data will be used as a base. If it can't find relevant data in MARC,
+	#open file in XML directory instead.
+	def readAlternate(self, item, extension):
+		#chop off the filetype, replace it
+		#note: only possible due to archive.org's impressive uniformity
+		item = item[:-9]
+		item = item + extension
+		file = open((os.path.join(self.directoryAlt, item)), 'r')
+		data = file.read()
+		file.close()
+		return data
+
+
+
 #functions that construct the JSON array
 class Components:
 
 	def __init__(self):
-		self.marcDir = fileHandlers('/data/MARC')
-		self.xmlDir = fileHandlers('/home/will/MHL_download/mhl_meta_xml_files')
+		self.marcDir = fileHandlers('/data/MARC', 
+			'/home/will/MHL_download/mhl_meta_xml_files')
+		self.xmlDir = fileHandlers('/home/will/MHL_download/mhl_meta_xml_files',
+			'/data/MARC')
 		self.marcNext = self.marcDir.openDir().next()
 		self.xmlNext = self.xmlDir.openDir().next()
 
 		self.marcRoot = ET.fromstring(self.marcDir.readItem(self.marcNext))
 		self.xmlRoot = ET.fromstring(self.xmlDir.readItem(self.xmlNext))
 
+#problem: how to align, synchornize two different filetypes
 	def getDate(self):
 		pass
 
