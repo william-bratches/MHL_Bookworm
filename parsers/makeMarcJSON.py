@@ -1,7 +1,4 @@
-#!/usr/bin/python
 
-"""This is the master parsing file. It will take a folder of raw texts, metadata, and marcXML
-	and construct the necessary input.txt and jsoncatalog.txt for Presidio to compile."""
 
 #build core files for Presidio database
 
@@ -10,26 +7,41 @@ import string
 import os, sys
 import subprocess
 import xml.etree.ElementTree as ET
+from xml.dom.minidom import parseString
+import inspect
+from pymarc import MARCReader
 #may not need some of these, preserve memory
-sys.setrecursionlimit(60000)
+sys.setrecursionlimit(70000)
 
 # open files, folders, read them
 class fileHandlers:
 
 	def __init__(self, directory, directoryAlt):
 		self.directory = directory
+		self.directoryAlt = directoryAlt #may be redundant
 
-
+	'''
 	#generator that returns next record in specified folder
-	def openDir(self):
-		for file in os.listdir(self.directory):
-	    		if (os.path.isfile(os.path.join(self.directory, file))):
-	        	    yield file
+	#turned out to be extremely buggy when abstracted
+	def openDir(self, dir):
+			for file in os.listdir(self.directory):
+	    			if (os.path.isfile(os.path.join(self.directory, file))):
+	        			yield file
+	'''
+	# older, slow, terrible method for iterating over file directory
+	# on the wishlist to improve but for now it gets the job done
+	def openDir(self, dir):
+		files = []
+		for item in os.listdir(dir):
+        		if (os.path.isfile(os.path.join(dir, item))):
+            			files.append(item)
+    				return files
 
 
 	#reads data within a file
-	def readItem(self, item):
-		file = open((os.path.join(self.directory, item)), 'r')
+	def readItem(self, count):
+		file = open((os.path.join(self.directory, self.openDir
+			(self.directory)[count])), 'r')
 		data = file.read()
 		file.close()
 		return data
@@ -37,12 +49,14 @@ class fileHandlers:
 
 	#MARC data will be used as a base. If it can't find relevant data in MARC,
 	#open file in XML directory instead.
-	def readAlternate(self, item, extension):
+	def readAlternate(self, count, extension):
 		#chop off the filetype, replace it
 		#note: only possible due to archive.org's impressive uniformity
+		item = self.openDir(self.directory)[count]
 		item = item[:-9]
 		item = item + extension
-		file = open((os.path.join(self.directoryAlt, item)), 'r')
+		file = open((os.path.join(self.directoryAlt, self.openDir
+			(self.directoryAlt)[count])), 'r')
 		data = file.read()
 		file.close()
 		return data
@@ -52,32 +66,86 @@ class fileHandlers:
 #functions that construct the JSON array
 class Components:
 
-	def __init__(self):
-		self.marcDir = fileHandlers('/data/MARC', 
-			'/home/will/MHL_download/mhl_meta_xml_files')
-		self.xmlDir = fileHandlers('/home/will/MHL_download/mhl_meta_xml_files',
-			'/data/MARC')
-		self.marcNext = self.marcDir.openDir().next()
-		self.xmlNext = self.xmlDir.openDir().next()
+	def __init__(self, count):
+		self.count = count #is an integer
+		#how and I going to pass this along in recursion?
 
-		self.marcRoot = ET.fromstring(self.marcDir.readItem(self.marcNext))
-		self.xmlRoot = ET.fromstring(self.xmlDir.readItem(self.xmlNext))
+		self.files = fileHandlers('/data/MARC', 
+			'/home/will/MHL_download/mhl_meta_xml_files')
+		self.marcNext = self.files.openDir(self.files.directory)
+		self.xmlNext = self.files.openDir(self.files.directoryAlt)
+
+		self.readMarc = self.files.readItem(count)
+		self.readXml = self.files.readAlternate(count, "_meta.xml")
+
+		self.marcRoot = ET.fromstring(self.readMarc)
+		self.xmlRoot = ET.fromstring(self.readXml)
 
 #problem: how to align, synchornize two different filetypes
 	def getDate(self):
+		if True or False: #leaving flexibility in, currently always true
+			root = self.marcRoot
+			for child in root:
+				tag = child.get('tag')
+				if tag == "260":
+						for sub in child:
+							code = sub.get('code')
+							if code == "c":
+								return code
+		else:
+			# can put alternate XML method here
+			print "failed"
 		pass
+              
 
 	def getLibrary(self):
-		pass
+		try:
+			for contributor in xmlRoot.findall('contributor'):
+				library = contributor.text
+		except TypeError:
+			library = ""
+
+		# validation
+		if 'library' in locals():
+			pass
+		else:
+			library = "Other"
+
 
 	def getLanguage(self):
-		pass
+		for language in xmlRoot.findall('language'):
+			language = language.text
+
+			if language=="English": #MHL database inconsistency
+				language = "eng"
+
+		# validation
+		if 'language' in locals():
+			pass
+		else:
+			language = ""
 
 	def getTitle(self):
-		pass
+		for title in root.findall('title'):
+			title = title.text
+		#sets title to filename if it does not exist
+		if 'title' in locals():
+			title = filter(lambda x: x in string.printable, title)
+			title = title.replace('"', '')
+			title = title.replace("'", " ")
+		else:
+			title = filename
 
 	def getSearchstring(self):
-		pass
+		for arlink in xmlRoot.findall('identifier-access'):
+			searchstring = arlink.text
+			if searchstring in locals():
+				searchstring = "[" + author + "], <em>" + title + \
+					 			"</em> (" + year + ") <a href=" + r"\"" + \
+								 searchstring + r"\"" + ">read</a>"
+				searchstring = searchstring.encode('ascii','ignore')
+			else:
+				searchstring = ""
 
 	def getSubject(self):
 		pass
@@ -87,14 +155,12 @@ class Components:
 
 
 def main():
-	buildJSON = Components()
-	print buildJSON.marcDir.openDir().next()
+	buildJSON = Components(0)
+	print buildJSON.readMarc
+	print buildJSON.getDate()
 
-	
+
+
 
 main()
 
-
-
-
-		
