@@ -8,11 +8,13 @@
 import re
 import string
 import os, sys
+import time
 import subprocess
 import xml.etree.ElementTree as ET
 from xml.dom.minidom import parseString
 import inspect
 from pymarc import MARCReader
+from geopy.geocoders import Nominatim
 #may not need some of these, preserve memory
 sys.setrecursionlimit(60000)
 
@@ -45,13 +47,13 @@ def readFolder(count, folder, files):
 #build jsoncatalog.txt
 def makeMeta(count):
     print "building jsoncatalog.txt..."
-    xfiles = parseFolder("/home/will/MHL_download/mhl_meta_xml_files", '_meta.xml')
+    xfiles = parseFolder("/data/MHL/MHL_download/mhl_meta_xml_files", '_meta.xml')
     subprocess.call(['touch', 'jsoncatalog.txt'])
     meta = open('jsoncatalog.txt', 'a')
 
     #extract XML, MARC tags, place in jsoncatalog.txt
     def buildMeta(count):
-        root = ET.fromstring(readFolder(count, "/home/will/MHL_download/mhl_meta_xml_files", xfiles))
+        root = ET.fromstring(readFolder(count, "/data/MHL/MHL_download/mhl_meta_xml_files", xfiles))
         
 
 
@@ -63,10 +65,6 @@ def makeMeta(count):
 
 
         #optional tags to extract
-            """note: I have hacked in some robust error handling, there were scope issues with
-               more elegant solutions, and it would require dynamically named variables,
-               so for now it is reliable brute force. Apologies for the mess,
-               I am aware that this is bad coding, and hope to clean it up later"""
 
         #date: handles inconsistent formatting
         for date in root.findall('date'):
@@ -175,26 +173,31 @@ def makeMeta(count):
             for child in rootMarc:
                     tag = child.get('tag')
                     if tag == "260":
-                        for sub in child:
-                            print sub.text[:9]
-                            city = filter(lambda x: x in string.ascii_letters, sub.text)
-                            if city == "Londonetc":
-                            	location = "London"
-                            elif city == "NewYork":
-                            	location ="New York"
-                            else:
-                            	location = city
-
-                            #code = child.get('c:ode')
-                           # if code == "a":
+                        for sub in child[:1]:
+                            location = re.sub('[;:,.]', '', sub.text)
+                            print location
+	                            
                             #    print sub
             if 'location' in locals():
-                pass
+                geolocator = Nominatim()
+                geolocation = geolocator.geocode(location, timeout=120)
+                try:
+                    coordinates = [geolocation.latitude, geolocation.longitude]
+                except AttributeError:
+                    coordinates = ["", ""]
+                except GeocoderServiceError:
+                    coordinates = ["", ""]
+                    time.sleep(500)
             else:
                 location = ""
 
         except IOError:
             location = ""
+
+        if 'coordinates' in locals():
+            pass
+        else:
+            coordinates = ["", ""]
 
         #subjects
         try:
@@ -267,6 +270,7 @@ def makeMeta(count):
                  "year" : year,
                  "subject" : subjectArray,
                  "location": location,
+                 "coordinates": coordinates,
                 }
 
         json = str(jdict)
@@ -280,6 +284,7 @@ def makeMeta(count):
         #recursion
         if count < ((len(xfiles)) -1):
             count = count + 1
+            time.sleep(1)
             buildMeta(count)
         else:
             print "\n jsoncatalog.txt done building! \n"
